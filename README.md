@@ -1,6 +1,8 @@
 Consul cluster with ansible
 =========
 
+Deploying virtual machines by terraform using a file "virtualbox.tf"
+
 Architecture
 ------------
 3 server nodes: [10.0.2.9, 10.0.2.10, 10.0.2.11] <br />
