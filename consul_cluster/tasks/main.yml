@@ -1,0 +1,94 @@
+---
+- name: Create User Consul
+  ansible.builtin.user:
+    name: "{{ ansible_user_consul }}"
+    system: yes
+    comment: "Consul Agent"
+
+- name: Copy Binary File
+  ansible.builtin.copy: 
+    src: "{{ source_file }}"
+    dest: "{{ destin_file }}"
+    owner: "{{ ansible_user_consul }}"
+    group: "{{ ansible_user_consul }}"
+    mode: 0550
+
+- name: Check Consul
+  ansible.builtin.shell: consul version -format=json
+  register: my_register_var
+  failed_when: (my_register_var.stdout | from_json).Version != '1.18.1'
+
+- name: Debug Version
+  ansible.builtin.debug: 
+    msg: "{{ (my_register_var.stdout | from_json).Version }}"
+
+- name: Save consul version to a file
+  ansible.builtin.copy:
+    content: "{{ my_register_var.stdout }}"
+    dest: "~/uptime.txt"
+
+- name: Create Directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user_consul }}"
+    group: "{{ ansible_user_consul }}"
+    mode: 0775
+  loop:
+    - '/var/lib/consul'
+    - '/etc/consul.d'
+
+- name: Consul Configuration File for Servers
+  ansible.builtin.template:
+    src: config_server.json.j2
+    dest: /etc/consul.d/config.json
+    owner: "{{ ansible_user_consul }}"
+    group: "{{ ansible_user_consul }}"
+  when: 
+    - inventory_hostname in groups['consul_server']
+  notify: Restart Consul
+
+- name: Consul Configuration File for Client
+  ansible.builtin.template:
+    src: config_client.json.j2
+    dest: /etc/consul.d/config.json
+    owner: "{{ ansible_user_consul }}"
+    group: "{{ ansible_user_consul }}"
+  when: 
+    - inventory_hostname in groups['consul_client']
+  notify: Restart Consul
+
+- name: Validation Check
+  ansible.builtin.shell:
+    cmd: consul validate /etc/consul.d
+
+- name: Systemd Configuration File
+  ansible.builtin.template:
+    src: consul.service.j2
+    dest: /etc/systemd/system/consul.service
+
+- name: do not permit traffic in default zone on port 8081/tcp
+  ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  loop:
+    # Server RPC
+    - { port: 8300, proto: tcp }
+    # Serf LAN
+    - { port: 8301, proto: tcp }
+    - { port: 8301, proto: udp }
+    # Serf WAN
+    - { port: 8302, proto: tcp }
+    - { port: 8302, proto: udp }
+    # HTTP API
+    - { port: 8500, proto: tcp }
+    # DNS Interface
+    - { port: 8600, proto: tcp }
+    - { port: 8600, proto: udp }
+
+- name: Start Consul Agent
+  ansible.builtin.systemd_service:
+    name: consul
+    enabled: yes
+    state: started

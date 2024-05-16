@@ -1,0 +1,21 @@
+{
+     "bind_addr": "{{ ansible_host }}",
+     "server": false,
+     "client_addr": "{{ ansible_host }}",
+     "datacenter": "dc1",
+     "node_name": "{{ inventory_hostname }}", 
+     "data_dir": "/var/lib/consul",
+     "domain": "consul",
+     "enable_syslog": true,
+     "encrypt": "dww8+u3z+IMIDj1qzMBni4mSgfc9Mtjrx/yVxLfidP0=",
+     "leave_on_terminate": true,
+     "log_level": "INFO",
+     "rejoin_after_leave": true,
+     "retry_join": [
+         {% for host in groups['consul_server'] %}
+            "{{ hostvars[host].ansible_host }}"
+            {% if not loop.last %},{% endif %}
+         {% endfor %}
+     ],
+     "ui_config": { "enabled": true }
+}
