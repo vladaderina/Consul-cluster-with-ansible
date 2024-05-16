@@ -3,7 +3,7 @@ Consul cluster with ansible
 
 Architecture
 ------------
-3 server nodes: [10.0.2.9, 10.0.2.10, 10.0.2.11]
+3 server nodes: [10.0.2.9, 10.0.2.10, 10.0.2.11] \n
 1 client node: [10.0.2.12]
 
 Tests
