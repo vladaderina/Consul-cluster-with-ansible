@@ -1,0 +1,10 @@
+---
+# ПЕРЕПИСАТЬ НА РОЛИ
+# https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html
+# https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#playbooks-conditionals
+
+- name: Install Consul
+  hosts: cluster
+  become: yes
+  roles:
+    - consul_cluster

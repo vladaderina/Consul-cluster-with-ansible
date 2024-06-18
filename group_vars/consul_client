@@ -1,0 +1,4 @@
+---
+ansible_user: vagrant
+ansible_ssh_private_key_file: /home/vlada/.ssh/id_rsa
+ansible_user_consul: consul
